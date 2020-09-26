@@ -3,7 +3,6 @@ package codeit.template.resource;
 import codeit.template.model.ContactTracing;
 import codeit.template.model.Genome;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.tools.javac.jvm.Gen;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -72,13 +71,14 @@ public class Resource {
     }
 
     @RequestMapping(value = "/contact_trace",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public void contactTrace(@RequestBody String body) throws JSONException, IOException {
+    public ArrayList<String> contactTrace(@RequestBody String body) throws JSONException, IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         ContactTracing contactTracing = objectMapper.readValue(body, ContactTracing.class);
 
         ArrayList<Genome> genomeCluster = contactTracing.getCluster();
         ArrayList<Genome> resultGenomes = new ArrayList<>();
         ArrayList<Genome> clusterOrigin = new ArrayList<>();
+        ArrayList<String> resultStrings = new ArrayList<>();
         resultGenomes.add(contactTracing.getInfected());
         Genome reference = contactTracing.getInfected();
 
@@ -87,51 +87,74 @@ public class Resource {
                     contactTracing.getOrigin());
             Genome bestMatch = reference;
             int numMatches = 0;
+            int mutations = 0;
+
             for (int i = 0; i < genomeCluster.size(); i++) {
                 int[] result = numMatches(reference,
                         genomeCluster.get(i));
                 if(result[0] > numMatches) {
                     numMatches = result[0];
                     bestMatch = genomeCluster.get(i);
-                }
-                if(result[1] > 1) {
-                    bestMatch.setMutation(true);
-                } else {
-                    bestMatch.setMutation(false);
+                    mutations = result[1];
                 }
             }
-            if (infectedToOrigin[0] < numMatches) {
+            if (infectedToOrigin[0] > numMatches) {
+                if(infectedToOrigin[1] > 1) {
+                    reference.setMutation(true);
+                } else {
+                    reference.setMutation(false);
+                }
                 resultGenomes.add(contactTracing.getOrigin());
                 break;
             } else if (infectedToOrigin[0] == numMatches) {
+                if(infectedToOrigin[1] > 1) {
+                    reference.setMutation(true);
+                } else {
+                    reference.setMutation(false);
+                }
                 clusterOrigin.addAll(new ArrayList<Genome>(resultGenomes));
                 resultGenomes.add(bestMatch);
                 clusterOrigin.add(contactTracing.getOrigin());
                 break;
             } else {
+                if(mutations > 1) {
+                    reference.setMutation(true);
+                } else {
+                    reference.setMutation(false);
+                }
                 resultGenomes.add(bestMatch);
                 genomeCluster.remove(bestMatch);
                 reference = bestMatch;
             }
         }
 
+        String resultString = "";
         for (int i = 0; i < resultGenomes.size(); i++) {
             if (i == resultGenomes.size() - 1) {
-                System.out.println(resultGenomes.get(i).toString());
+                resultString += resultGenomes.get(i).toString();
             } else {
-                System.out.print(resultGenomes.get(i).toString());
-                System.out.print("->");
+                resultString += (resultGenomes.get(i).toString());
+                resultString += (" -> ");
             }
+        }
+        if(!resultString.equals("")) {
+            resultStrings.add(resultString);
         }
 
+        resultString = "";
         for (int i = 0; i < clusterOrigin.size(); i++) {
             if (i == clusterOrigin.size() - 1) {
-                System.out.println(clusterOrigin.get(i).toString());
+                resultString += clusterOrigin.get(i).toString();
             } else {
-                System.out.print(clusterOrigin.get(i).toString());
-                System.out.print("->");
+                resultString += (clusterOrigin.get(i).toString());
+                resultString += (" -> ");
             }
         }
+        if(!resultString.equals("")) {
+            resultStrings.add(resultString);
+        }
+
+        return resultStrings;
     }
 
     private int[] numMatches (Genome genome1, Genome genome2) {
