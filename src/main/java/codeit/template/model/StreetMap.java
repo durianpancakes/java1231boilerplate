@@ -6,13 +6,13 @@ import java.util.ArrayList;
 
 public class StreetMap {
     @JsonProperty("salad_prices_street_map")
-    private ArrayList<Integer> streetMap = new ArrayList<>();
+    private final Integer[][] streetMap;
 
-    public StreetMap(@JsonProperty("salad_prices_street_map") ArrayList<Integer> streetMap){
+    public StreetMap(@JsonProperty("salad_prices_street_map") Integer[][] streetMap){
         this.streetMap = streetMap;
     }
 
-    public ArrayList<Integer> getInput() {
+    public Integer[][] getInput() {
         return streetMap;
     }
 }
