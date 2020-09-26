@@ -9,12 +9,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.json.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 public class SaladResource {
    @RequestMapping(value = "/salad-spree",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Integer saladSpree(@RequestBody Map<String, Object> body) throws JSONException {
+    public Map<String, Integer> saladSpree(@RequestBody Map<String, Object> body) throws JSONException {
        Integer numSalads = Integer.parseInt(body.get("number_of_salads").toString());
        boolean changed = false;
        int price = Integer.MAX_VALUE;
@@ -56,11 +57,13 @@ public class SaladResource {
                }
            }
        }
-
+       HashMap<String, Integer> resultMap = new HashMap<>();
        if (changed) {
-           return price;
+           resultMap.put("result", price);
        } else {
-           return 0;
+           resultMap.put("result", 0);
        }
+
+       return resultMap;
     }
 }
