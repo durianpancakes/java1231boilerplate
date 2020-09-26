@@ -17,7 +17,7 @@ public class SaladResource {
    @RequestMapping(value = "/salad-spree",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public Integer calculateSquare(@RequestBody Map<String, String> body){
        Integer value = Integer.parseInt(body.get("number_of_salads"));
-
-       return value* value;
+       Integer value2 = Integer.parseInt(body.get("salad_prices_street_map"));
+       return value* value2;
     }
 }
