@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class Genome {
     private String name;
     private String genome;
-    private boolean isSilentMutation = false;
+    private boolean isMutation = false;
 
     public String getName() {
         return name;
@@ -24,11 +24,20 @@ public class Genome {
         this.genome = genome;
     }
 
-    public boolean isSilentMutation() {
-        return isSilentMutation;
+    public boolean isMutation() {
+        return isMutation;
     }
 
-    public void setSilentMutation(boolean silentMutation) {
-        isSilentMutation = silentMutation;
+    public void setMutation(boolean silentMutation) {
+        isMutation = silentMutation;
+    }
+
+    @Override
+    public String toString() {
+        if (isMutation) {
+            return name + "*";
+        } else {
+            return name;
+        }
     }
 }

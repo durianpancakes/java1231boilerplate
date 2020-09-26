@@ -3,6 +3,7 @@ package codeit.template.resource;
 import codeit.template.model.ContactTracing;
 import codeit.template.model.Genome;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.tools.javac.jvm.Gen;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -75,28 +76,61 @@ public class Resource {
         ObjectMapper objectMapper = new ObjectMapper();
         ContactTracing contactTracing = objectMapper.readValue(body, ContactTracing.class);
 
-        int[] infectedToOrigin = numMatches(contactTracing.getInfected(), contactTracing.getOrigin());
         ArrayList<Genome> genomeCluster = contactTracing.getCluster();
         ArrayList<Genome> resultGenomes = new ArrayList<>();
-        boolean reachedOrigin = false;
+        ArrayList<Genome> clusterOrigin = new ArrayList<>();
+        resultGenomes.add(contactTracing.getInfected());
+        Genome reference = contactTracing.getInfected();
 
-        while (!reachedOrigin) {
-            Genome bestMatch;
+        while (true) {
+            int[] infectedToOrigin = numMatches(reference,
+                    contactTracing.getOrigin());
+            Genome bestMatch = reference;
             int numMatches = 0;
             for (int i = 0; i < genomeCluster.size(); i++) {
-                int[] result = numMatches(contactTracing.getInfected(), genomeCluster.get(i)))
+                int[] result = numMatches(reference,
+                        genomeCluster.get(i));
                 if(result[0] > numMatches) {
                     numMatches = result[0];
                     bestMatch = genomeCluster.get(i);
                 }
                 if(result[1] > 1) {
-                    bestMatch.setSilentMutation(true);
+                    bestMatch.setMutation(true);
                 } else {
-                    bestMatch.setSilentMutation(false);
+                    bestMatch.setMutation(false);
                 }
             }
-            resultGenomes.add(bestMatch);
-            genomeCluster.remove(bestMatch);
+            if (infectedToOrigin[0] < numMatches) {
+                resultGenomes.add(contactTracing.getOrigin());
+                break;
+            } else if (infectedToOrigin[0] == numMatches) {
+                clusterOrigin.addAll(new ArrayList<Genome>(resultGenomes));
+                resultGenomes.add(bestMatch);
+                clusterOrigin.add(contactTracing.getOrigin());
+                break;
+            } else {
+                resultGenomes.add(bestMatch);
+                genomeCluster.remove(bestMatch);
+                reference = bestMatch;
+            }
+        }
+
+        for (int i = 0; i < resultGenomes.size(); i++) {
+            if (i == resultGenomes.size() - 1) {
+                System.out.println(resultGenomes.get(i).toString());
+            } else {
+                System.out.print(resultGenomes.get(i).toString());
+                System.out.print("->");
+            }
+        }
+
+        for (int i = 0; i < clusterOrigin.size(); i++) {
+            if (i == clusterOrigin.size() - 1) {
+                System.out.println(clusterOrigin.get(i).toString());
+            } else {
+                System.out.print(clusterOrigin.get(i).toString());
+                System.out.print("->");
+            }
         }
     }
 
