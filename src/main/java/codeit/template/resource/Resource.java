@@ -2,6 +2,8 @@ package codeit.template.resource;
 
 import codeit.template.model.ContactTracing;
 import codeit.template.model.Genome;
+import codeit.template.model.InventoryManagementInput;
+import codeit.template.model.InventoryManagementResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -68,6 +70,133 @@ public class Resource {
        }
 
        return resultMap;
+    }
+
+    @RequestMapping(value = "/inventory-management",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public InventoryManagementResult inventoryManagement (@RequestBody String body) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        InventoryManagementInput inventoryManagementInput = objectMapper.readValue(body, InventoryManagementInput.class);
+
+        int i = 0;
+        ArrayList<String> items = inventoryManagementInput.getItems();
+        String searchItemName = inventoryManagementInput.getSearchItemName();
+        ArrayList<String> result = new ArrayList<>();
+
+        while(i < items.size()) {
+            result.add(compareQuery(searchItemName, items.get(i)));
+        }
+
+        InventoryManagementResult inventoryManagementResult = new InventoryManagementResult();
+        inventoryManagementResult.setSearchItemName(searchItemName);
+        inventoryManagementResult.setSearchResult(result);
+
+        return inventoryManagementResult;
+    }
+
+    public static String compareWord(String origWord, String badWord) {
+
+        String finalWord;
+        int iterator1 = 0;
+        int iterator2 = 0;
+
+        while (iterator2 < origWord.length() -1  || iterator1 < badWord.length() -1 ) {
+            while (badWord.charAt(iterator1) == origWord.charAt(iterator2)) {
+                if(iterator1 < (badWord.length()-1)) {
+                    iterator1++;
+                }
+                if(iterator2 < (origWord.length()-1)) {
+                    iterator2++;
+                }
+                if(iterator1 == badWord.length()-1 && iterator2 == origWord.length()-1){
+                    break;
+                }
+            }
+
+            while ((iterator1 < badWord.length()|| iterator2 < origWord.length()-1 )&&(origWord.charAt(iterator2) != badWord.charAt(iterator1))) {
+
+                switch (checkIfSubOrInsOrDel(badWord.substring(iterator1), origWord.charAt(iterator2), origWord.substring(iterator2), badWord.charAt(iterator1))) {
+                    case "insert":
+                        origWord = origWord.substring(0, iterator2+1) + "+" + badWord.charAt(iterator1) + origWord.substring(iterator2+1);
+                        iterator1++;
+                        iterator2+=2;
+                        if (iterator1 >= badWord.length() || iterator2 >= origWord.length() ) {
+                            break;
+                        }
+                        break;
+                    case "del":
+                        origWord = origWord.substring(0, iterator2) + "-" + origWord.substring(iterator2);
+                        iterator2+=2;
+                        if (iterator1 < badWord.length() -1 || iterator2 < origWord.length()-1 ) {
+                            break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+
+        }
+        finalWord = checkIfSub(origWord);//
+        return finalWord;
+
+    }
+
+    public static String checkIfSubOrInsOrDel(String badsubstring, char goodCompareChar, String goodsubstring, char badCompareChar) {
+        int i = 0;
+        while (badsubstring.charAt(i) != goodCompareChar) {
+            i++;
+            if(i==badsubstring.length()){
+                break;
+            }
+        }
+        if (checkIfDel(goodsubstring, badCompareChar).equals("del")) {
+            return "del";
+        } else if (checkIfIns(goodsubstring, badCompareChar).equals("ins")) {
+            return "insert";
+        } else {
+            return "";
+        }
+
+    }
+
+    public static String checkIfDel(String goodsubstring, char compareChar) {
+        if (goodsubstring.indexOf(compareChar)!=-1) {
+            return "del";
+        }
+        return "";
+    }
+    public static String checkIfIns(String goodsubstring, char badCompareChar) {
+        if (goodsubstring.indexOf(badCompareChar)==-1) {
+            return "ins";
+        }
+        return "";
+    }
+    public static String checkIfSub(String toCheck){
+
+        String noChange = toCheck;
+
+        try {
+            String replaceWith = new StringBuilder().append(toCheck.charAt(toCheck.indexOf('+') + 3)).append(toCheck.charAt(toCheck.indexOf('+') + 1)).toString();
+            if (Math.abs(toCheck.indexOf('+') - toCheck.indexOf('-')) == 2) {
+                toCheck = toCheck.replaceAll("[+]\\w[-]\\w", (replaceWith));
+                return toCheck;
+            }
+        } catch (Exception ignored){}
+        return noChange;
+    }
+
+    public static String compareQuery(String properPhrase, String muddledPhrase) {
+        String[] mainTerm = properPhrase.trim().toLowerCase().split(" ", 0);
+        String[] muddledWords = muddledPhrase.trim().toLowerCase().split(" ", 0);
+        String finalPhrase = "";
+        int i = 0;
+        while (i < mainTerm.length) {
+            finalPhrase += compareWord(mainTerm[i], muddledWords[i]) + " ";
+            i++;
+        }
+
+        return finalPhrase;
     }
 
     @RequestMapping(value = "/contact_trace",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
