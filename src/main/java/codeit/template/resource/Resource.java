@@ -73,24 +73,32 @@ public class Resource {
     }
 
     @RequestMapping(value = "/inventory-management",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public InventoryManagementResult inventoryManagement (@RequestBody String body) throws IOException {
+    public ArrayList<InventoryManagementResult> inventoryManagement (@RequestBody String body) throws IOException {
+       System.out.println("Entered");
         ObjectMapper objectMapper = new ObjectMapper();
-        InventoryManagementInput inventoryManagementInput = objectMapper.readValue(body, InventoryManagementInput.class);
+        InventoryManagementInput[] inventoryManagementInput = objectMapper.readValue(body, InventoryManagementInput[].class);
+        ArrayList<InventoryManagementResult> result = new ArrayList<>();
 
-        int i = 0;
-        ArrayList<String> items = inventoryManagementInput.getItems();
-        String searchItemName = inventoryManagementInput.getSearchItemName();
-        ArrayList<String> result = new ArrayList<>();
 
-        while(i < items.size()) {
-            result.add(compareQuery(searchItemName, items.get(i)));
+        for(int n = 0; n < inventoryManagementInput.length; n++) {
+            int i = 0;
+            ArrayList<String> items = inventoryManagementInput[n].getItems();
+            String searchItemName = inventoryManagementInput[n].getSearchItemName();
+            ArrayList<String> resultString = new ArrayList<>();
+
+            while(i < items.size()) {
+                resultString.add(compareQuery(searchItemName, items.get(i)));
+                i++;
+            }
+
+            InventoryManagementResult inventoryManagementResult = new InventoryManagementResult();
+            inventoryManagementResult.setSearchItemName(searchItemName);
+            inventoryManagementResult.setSearchResult(resultString);
+
+            result.add(inventoryManagementResult);
         }
 
-        InventoryManagementResult inventoryManagementResult = new InventoryManagementResult();
-        inventoryManagementResult.setSearchItemName(searchItemName);
-        inventoryManagementResult.setSearchResult(result);
-
-        return inventoryManagementResult;
+        return result;
     }
 
     public static String compareWord(String origWord, String badWord) {
