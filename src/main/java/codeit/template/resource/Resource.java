@@ -86,7 +86,7 @@ public class Resource {
             ArrayList<String> resultString = new ArrayList<>();
 
             while(i < items.size()) {
-                resultString.add(compareQuery(searchItemName, items.get(i)));
+                resultString.add(compareQuery(searchItemName, items.get(i)).trim());
                 i++;
             }
 
