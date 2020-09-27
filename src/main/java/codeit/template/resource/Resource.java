@@ -74,7 +74,6 @@ public class Resource {
 
     @RequestMapping(value = "/inventory-management",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ArrayList<InventoryManagementResult> inventoryManagement (@RequestBody String body) throws IOException {
-       System.out.println("Entered");
         ObjectMapper objectMapper = new ObjectMapper();
         InventoryManagementInput[] inventoryManagementInput = objectMapper.readValue(body, InventoryManagementInput[].class);
         ArrayList<InventoryManagementResult> result = new ArrayList<>();
